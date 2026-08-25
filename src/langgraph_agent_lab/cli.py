@@ -9,7 +9,7 @@ from typing import Annotated
 import typer
 import yaml
 
-from .graph import build_graph
+from .graph import build_graph, export_mermaid
 from .metrics import MetricsReport, metric_from_state, summarize_metrics, write_metrics
 from .persistence import build_checkpointer
 from .report import write_report
@@ -29,13 +29,28 @@ def run_scenarios(
     scenarios = load_scenarios(cfg["scenarios_path"])
     checkpointer = build_checkpointer(cfg.get("checkpointer", "memory"), cfg.get("database_url"))
     graph = build_graph(checkpointer=checkpointer)
+    if diagram_path := cfg.get("diagram_path"):
+        export_mermaid(graph, diagram_path)
     metrics = []
+    resume_success = False
     for scenario in scenarios:
         state = initial_state(scenario)
         run_config = {"configurable": {"thread_id": state["thread_id"]}}
         final_state = graph.invoke(state, config=run_config)
-        metrics.append(metric_from_state(final_state, scenario.expected_route.value, scenario.requires_approval))
-    report = summarize_metrics(metrics)
+        metrics.append(
+            metric_from_state(
+                final_state,
+                scenario.expected_route.value,
+                scenario.requires_approval,
+            )
+        )
+        if checkpointer is not None:
+            try:
+                history = list(graph.get_state_history(run_config))
+                resume_success = resume_success or len(history) > 1
+            except (AttributeError, TypeError):
+                pass
+    report = summarize_metrics(metrics, resume_success=resume_success)
     write_metrics(report, output)
     if cfg.get("report_path"):
         write_report(report, cfg["report_path"])

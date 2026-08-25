@@ -11,6 +11,9 @@ import importlib.util
 import os
 
 import pytest
+from dotenv import load_dotenv
+
+load_dotenv()
 
 pytestmark = [
     pytest.mark.skipif(
@@ -18,7 +21,9 @@ pytestmark = [
         reason="langgraph not installed",
     ),
     pytest.mark.skipif(
-        not os.getenv("GEMINI_API_KEY") and not os.getenv("OPENAI_API_KEY") and not os.getenv("ANTHROPIC_API_KEY"),
+        not os.getenv("GEMINI_API_KEY")
+        and not os.getenv("OPENAI_API_KEY")
+        and not os.getenv("ANTHROPIC_API_KEY"),
         reason="No LLM API key configured (set GEMINI_API_KEY, OPENAI_API_KEY, or ANTHROPIC_API_KEY)",
     ),
 ]

@@ -12,9 +12,12 @@ Usage in nodes:
 from __future__ import annotations
 
 import os
+from typing import Any
+
+from dotenv import load_dotenv
 
 
-def get_llm(model: str | None = None, temperature: float = 0.0):
+def get_llm(model: str | None = None, temperature: float = 0.0) -> Any:
     """Create an LLM client from environment configuration.
 
     Checks for API keys in this order:
@@ -24,13 +27,15 @@ def get_llm(model: str | None = None, temperature: float = 0.0):
 
     Override model with the `model` parameter or LLM_MODEL env var.
     """
+    load_dotenv()
+
     if os.getenv("GEMINI_API_KEY"):
         try:
             from langchain_google_genai import ChatGoogleGenerativeAI
         except ImportError as exc:
             raise RuntimeError("Install: pip install langchain-google-genai") from exc
         return ChatGoogleGenerativeAI(
-            model=model or os.getenv("LLM_MODEL", "gemini-2.5-flash"),
+            model=model or os.getenv("LLM_MODEL", "gemini-3.1-flash-lite"),
             google_api_key=os.getenv("GEMINI_API_KEY"),
             temperature=temperature,
         )

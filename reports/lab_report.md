@@ -1,36 +1,4 @@
-"""Report generation helper.
-
-TODO(student): implement report rendering using MetricsReport data
-and the template in reports/lab_report_template.md.
-"""
-
-from __future__ import annotations
-
-from pathlib import Path
-
-from .metrics import MetricsReport
-
-
-def render_report(metrics: MetricsReport) -> str:
-    """Render a complete lab report from metrics data.
-
-    TODO(student): Generate a report that includes:
-    1. Metrics summary table (total scenarios, success rate, retries, interrupts)
-    2. Per-scenario results table
-    3. Architecture explanation (your graph design, state schema, reducers)
-    4. Failure analysis (at least two failure modes you considered)
-    5. Improvement plan
-
-    Use reports/lab_report_template.md as your guide.
-
-    Return: formatted markdown string
-    """
-    rows = "\n".join(
-        "| {scenario_id} | {expected_route} | {actual_route} | {success} | "
-        "{retry_count} | {interrupt_count} |".format(**item.model_dump())
-        for item in metrics.scenario_metrics
-    )
-    return f"""# Day 08 Lab Report
+# Day 08 Lab Report
 
 ## 1. Team / student
 
@@ -49,11 +17,17 @@ Append-only fields are `messages`, `tool_results`, `errors`, and `events` for au
 
 | Total scenarios | Success rate | Avg. nodes visited | Total retries | Total approvals | State-history replay |
 |---:|---:|---:|---:|---:|---:|
-| {metrics.total_scenarios} | {metrics.success_rate:.2%} | {metrics.avg_nodes_visited:.2f} | {metrics.total_retries} | {metrics.total_interrupts} | {metrics.resume_success} |
+| 7 | 100.00% | 6.43 | 3 | 2 | True |
 
 | Scenario | Expected route | Actual route | Success | Retries | Interrupts |
 |---|---|---|---:|---:|---:|
-{rows}
+| S01_simple | simple | simple | True | 0 | 0 |
+| S02_tool | tool | tool | True | 0 | 0 |
+| S03_missing | missing_info | missing_info | True | 0 | 0 |
+| S04_risky | risky | risky | True | 0 | 1 |
+| S05_error | error | error | True | 2 | 0 |
+| S06_delete | risky | risky | True | 0 | 1 |
+| S07_dead_letter | error | error | True | 1 | 0 |
 
 ## 5. Failure analysis
 
@@ -73,11 +47,3 @@ The compiled graph is exported as Mermaid when `diagram_path` is configured. Thi
 ## 8. Improvement plan
 
 Next, add domain tools with authenticated data access, LLM-as-judge evaluation, real human approval UI, and tracing around model and tool latency.
-"""
-
-
-def write_report(metrics: MetricsReport, output_path: str | Path) -> None:
-    """Write the rendered report to a file."""
-    path = Path(output_path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(render_report(metrics), encoding="utf-8")
